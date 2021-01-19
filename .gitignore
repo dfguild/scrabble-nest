@@ -37,3 +37,4 @@ lerna-debug.log*
 # Secure files
 config.json
 dev-nynqy0sn.pem
+.env
