@@ -1,12 +1,6 @@
-export const AWS_DYNAMODB_CONFIG = {
-  apiVersion: '2012-08-10',
-  accessKeyId: 'AKIARB6Q6JWU73KDYVXC',
-  secretAccessKey: '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',
-  region: 'us-east-1',
-};
-
-export const PLAYERS_TABLE = 'players';
 export const GAMES_TABLE = 'games';
+export const vaultName = 'guild-scrabble-keyvault';
+export const vaultURL = `https://${vaultName}.vault.azure.net`;
 
 export const BLANK_GRID = [
   ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
