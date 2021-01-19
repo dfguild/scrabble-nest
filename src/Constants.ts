@@ -1,6 +1,9 @@
-export const GAMES_TABLE = 'games';
-export const vaultName = 'guild-scrabble-keyvault';
-export const vaultURL = `https://${vaultName}.vault.azure.net`;
+export const VAULT_NAME = 'guild-scrabble-keyvault';
+export const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
+export const DB_SECRET_NAME = 'cdbsecret';
+export const DB_NAME = 'GuildScrabbleDB';
+export const DB_URL = 'https://guild-scrabble-cosmodb-api.documents.azure.com:443/';
+export const CONTAINER_NAME = 'games';
 
 export const BLANK_GRID = [
   ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],

@@ -18,9 +18,9 @@ export class GameApiGateway {
   //GAME related INBOUND API requests
 
   @SubscribeMessage('startGame')
-  async onGameStart(@ConnectedSocket() client: Socket, @MessageBody() g: { player: string; gameId: number }) {
-    const gameDto: GameDTO = this.gamesDb.getGame(g.gameId);
-    client.join(g.gameId.toString()); //join room of game name
+  async onGameStart(@ConnectedSocket() client: Socket, @MessageBody() g: { player: string; id: string }) {
+    const gameDto: GameDTO = this.gamesDb.getGame(g.id);
+    client.join(g.id); //join room of game name
     this.logger.debug(`:get gameDTO: ${JSON.stringify(gameDto)}`);
     this.sendGameDto(gameDto, client);
   }
@@ -34,7 +34,7 @@ export class GameApiGateway {
 
   async onGameJoin(gInDto: GameCreateInDto) {
     this.logger.debug(`:onGameJoin - getting DTO`);
-    this.server.to(gInDto.gameId.toString()).emit('gameJoinUpdate', this.gamesDb.getGame(gInDto.gameId));
+    this.server.to(gInDto.id).emit('gameJoinUpdate', this.gamesDb.getGame(gInDto.id));
   }
 
   //send game updates to correct room
@@ -43,7 +43,7 @@ export class GameApiGateway {
     if (socket) {
       socket.emit('gameDto', g);
     } else {
-      this.server.to(g.gameId.toString()).emit('gameDto', g);
+      this.server.to(g.id.toString()).emit('gameDto', g);
     }
   }
 
@@ -52,8 +52,7 @@ export class GameApiGateway {
   @SubscribeMessage('createGame')
   createGame(@MessageBody() gameCreateInDto: GameCreateInDto): void {
     this.logger.debug(`:createGame calling gameCreate DTO in: ${JSON.stringify(gameCreateInDto)}`);
-    this.gmService.createGame(gameCreateInDto);
-    this.sendGamesList();
+    this.gmService.createGame(gameCreateInDto).then(() => this.sendGamesList());
   }
 
   @SubscribeMessage('joinGame')

@@ -12,9 +12,8 @@ export class GameService {
     this._logger = new Logger(GameService.name);
   }
 
-  createGame(gameCreateInDto: GameCreateInDto): boolean {
+  async createGame(gameCreateInDto: GameCreateInDto): Promise<void> {
     const g = new GameDTO();
-    g.gameId = ++this.gamesDb.maxId;
     g.turn = 0;
     g.grid = Constants.BLANK_GRID;
     g.gameName = gameCreateInDto.gameName;
@@ -34,15 +33,13 @@ export class GameService {
     g.remainingTiles = this.tileBag.tileBag;
     this._logger.debug(`:createGame returning remainingTile with length of:${g.remainingTiles.length}`);
 
-    this.gamesDb.addGame(g);
+    await this.gamesDb.addGame(g);
     this._logger.debug('Created Game: Verbose to display');
     this._logger.verbose(`:createGame new game=${JSON.stringify(g)}`);
-
-    return true;
   }
 
   joinGame(gmCreateDTO: GameCreateInDto): boolean {
-    const g = this.gamesDb.getGame(gmCreateDTO.gameId);
+    const g = this.gamesDb.getGame(gmCreateDTO.id);
     this._logger.debug(`joining game with: ${JSON.stringify(gmCreateDTO)}`);
 
     const p = new PlayerDTO();
@@ -61,7 +58,7 @@ export class GameService {
   }
 
   updateGame(newGameDto: GameDTO): GameDTO {
-    const g = this.gamesDb.getGame(newGameDto.gameId);
+    const g = this.gamesDb.getGame(newGameDto.id);
     this._logger.debug(`:updateGame updating turn from: ${g.turn}`);
     g.turn = ++g.turn % g.players.length;
     this._logger.debug(`:updateGame updating turn to: ${g.turn}`);

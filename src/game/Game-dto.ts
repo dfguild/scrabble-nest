@@ -1,5 +1,5 @@
 export class GameDTO {
-  gameId: number = NaN;
+  id: string = '';
   gameName: string = '';
   turn: number = 0;
   totalMoves: number = 0;
@@ -27,13 +27,13 @@ export class PlayerDTO {
 
 export class GameCreateInDto {
   gameName: string;
-  gameId: number;
+  id: string;
   playerName: string;
 }
 
 export class GameListItem {
   gameName: string = '';
-  gameId: number = 0;
+  id: string = '';
   gameTurn: number = 0;
   gamePlayers: string[] = [];
   totalMoves: number = 0;

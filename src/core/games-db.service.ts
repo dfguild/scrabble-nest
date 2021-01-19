@@ -1,85 +1,58 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
 import { GameDTO, GameListDTO, GameListItem } from '../game/Game-dto';
 import * as Constants from '../Constants';
-
-const ddb = new AWS.DynamoDB.DocumentClient(Constants.AWS_DYNAMODB_CONFIG);
-const TABLE_NAME = Constants.GAMES_TABLE;
+import { DefaultAzureCredential } from '@azure/identity';
+import { SecretClient } from '@azure/keyvault-secrets';
+import { CosmosClient, Container } from '@azure/cosmos';
 
 @Injectable()
 export class GamesDbService implements OnModuleInit {
-  private readonly gameIdToGameDto: Map<number, GameDTO> = new Map();
+  private readonly idToGameDto: Map<string, GameDTO> = new Map();
   private readonly logger: Logger = new Logger(GamesDbService.name);
-  maxId = 0;
+  private db: Container;
 
   onModuleInit(): void {
-    const params = {
-      TableName: TABLE_NAME,
-    };
-
-    ddb.scan(params, (err, data) => {
-      if (err) {
-        this.logger.debug(`Unable to scan the table. Error JSON:${JSON.stringify(err, null, 2)}`);
-      } else {
-        console.log('Scan succeeded.');
-        data.Items.forEach((item) => {
-          const g = item as GameDTO;
-          this.maxId = Math.max(this.maxId, g.gameId);
-          this.logger.debug(`Item :${JSON.stringify(g)}`);
-          this.gameIdToGameDto.set(g.gameId, g);
-        });
-      }
-    });
+    this.initDB();
   }
 
-  getGame(id: number): GameDTO {
-    return this.gameIdToGameDto.get(id);
+  async initDB(): Promise<void> {
+    const secretClient = new SecretClient(Constants.VAULT_URL, new DefaultAzureCredential());
+
+    const secret = await secretClient.getSecret(Constants.DB_SECRET_NAME);
+
+    const dbClient = new CosmosClient({ endpoint: Constants.DB_URL, key: secret.value });
+    this.db = dbClient.database(Constants.DB_NAME).container(Constants.CONTAINER_NAME);
+
+    const { resources } = await this.db.items.query<GameDTO>('Select * from c').fetchAll();
+
+    for (const g of resources) {
+      this.logger.debug(`:InitDB Item=${JSON.stringify(g)}`);
+      this.idToGameDto.set(g.id, g);
+    }
   }
 
-  addGame(newGm: GameDTO): void {
+  getGame(id: string): GameDTO {
+    return this.idToGameDto.get(id);
+  }
+
+  async addGame(newGm: GameDTO): Promise<void> {
     newGm.gameDate = this.getDate();
-    this.gameIdToGameDto.set(newGm.gameId, newGm);
-    const params = {
-      TableName: TABLE_NAME,
-      Item: newGm,
-    };
-
-    this.logger.debug(`:addGame calling put with params=${JSON.stringify(params)}`);
-
-    ddb.put(params, (err, data) => {
-      this.logger.debug(`:addGame - Entered callback`);
-      if (err) {
-        this.logger.debug(`Unable to pub game. Error JSON:${JSON.stringify(err, null, 2)}`);
-      } else {
-        this.logger.debug(`Put succeeded with data=${JSON.stringify(data)}`);
-      }
-    });
+    const { resource } = await this.db.items.create(newGm);
+    newGm.id = resource.id;
+    this.idToGameDto.set(newGm.id, newGm);
   }
 
   updateGame(newGm: GameDTO): void {
     newGm.gameDate = this.getDate();
-    this.gameIdToGameDto.set(newGm.gameId, newGm);
-
-    const params = {
-      TableName: TABLE_NAME,
-      Item: newGm,
-    };
-
-    ddb.put(params, (err, data) => {
-      this.logger.debug(`:updateGame - Entered callback`);
-      if (err) {
-        this.logger.debug(`Unable to pub game. Error JSON:${JSON.stringify(err, null, 2)}`);
-      } else {
-        this.logger.debug(`Put succeeded with data=${JSON.stringify(data)}`);
-      }
-    });
+    this.idToGameDto.set(newGm.id, newGm);
+    this.db.items.upsert(newGm);
   }
 
   getGamesList(): GameListDTO {
     const gameList: GameListDTO = [];
-    for (const [gameId, game] of this.gameIdToGameDto) {
+    for (const [gameId, game] of this.idToGameDto) {
       const itemObj = new GameListItem();
-      itemObj.gameId = gameId;
+      itemObj.id = gameId;
       itemObj.gameName = game.gameName;
       itemObj.gamePlayers = game.players.map((p) => p.player_name);
       itemObj.gameTurn = game.turn;
@@ -88,7 +61,7 @@ export class GamesDbService implements OnModuleInit {
     }
     this.logger.debug(`:getGamesList returning ${JSON.stringify(gameList)}`);
 
-    return gameList.sort((a, b) => a.gameId - b.gameId);
+    return gameList;
   }
 
   private getDate(): string {

@@ -26,12 +26,10 @@ export class JwtAuthGuard implements CanActivate {
     this.logger.debug(':canActivate');
     const client: Socket = context.switchToWs().getClient<Socket>();
     const authToken: string = client.handshake.query['token'];
-    this.logger.verbose(`:canActivate token: ${authToken}`);
     const getKey = promisify(this.jwks.getSigningKeyAsync);
     try {
       const key = await getKey(this.getKid(authToken));
       const signingKey = (key['publicKey'] as string) || (key['rsaPublicKey'] as string);
-      this.logger.verbose(`:getSigningKey key=${signingKey}`);
       const jwtPayload = jwt.verify(authToken, signingKey, { algorithms: ['RS256'] });
       console.log(':canActivate jwtPayload=', jwtPayload, ' returning true');
       return Boolean(jwtPayload);
