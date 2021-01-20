@@ -31,10 +31,10 @@ export class JwtAuthGuard implements CanActivate {
       const key = await getKey(this.getKid(authToken));
       const signingKey = (key['publicKey'] as string) || (key['rsaPublicKey'] as string);
       const jwtPayload = jwt.verify(authToken, signingKey, { algorithms: ['RS256'] });
-      console.log(':canActivate jwtPayload=', jwtPayload, ' returning true');
+      this.logger.debug(`:canActivate jwtPayload=${JSON.stringify(jwtPayload)}returning true`);
       return Boolean(jwtPayload);
     } catch (err) {
-      console.log('canActivate catch block with err=', err);
+      this.logger.error(`canActivate catch block with err=${err}`);
       throw new WsException(err.message);
     }
   }

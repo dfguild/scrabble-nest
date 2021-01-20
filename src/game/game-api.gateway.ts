@@ -8,7 +8,7 @@ import { GamesDbService } from '../core/games-db.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@WebSocketGateway({ origin: 'localhost:4000' })
+@WebSocketGateway({ origin: process.env.CORS_ORIGIN })
 export class GameApiGateway {
   private readonly logger = new Logger(GameApiGateway.name);
   @WebSocketServer() server;
