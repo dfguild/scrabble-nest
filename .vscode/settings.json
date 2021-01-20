@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/76724bd1-70b8-49d6-acc2-70a5f962844c/resourceGroups/GuildScrabble/providers/Microsoft.Web/sites/guild-scrabble-api",
+    "appService.deploySubpath": "."
+}
