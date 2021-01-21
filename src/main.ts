@@ -9,7 +9,7 @@ async function bootstrap() {
     logger: ['log', 'debug', 'error', 'verbose', 'warn'],
   });
   app.enableCors();
-  console.log(`listening on port ${process.env.PORT}`);
-  await app.listen(process.env.PORT);
+  console.log(`listening on port ${process.env.PORT || 3000}`);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
