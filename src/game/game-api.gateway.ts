@@ -43,7 +43,7 @@ export class GameApiGateway {
     if (socket) {
       socket.emit('gameDto', g);
     } else {
-      this.server.to(g.id.toString()).emit('gameDto', g);
+      this.server.to(g.id).emit('gameDto', g);
     }
   }
 
