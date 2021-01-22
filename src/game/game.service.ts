@@ -51,6 +51,11 @@ export class GameService {
     g.players.push(p);
     g.remainingTiles = this.tileBag.tileBag;
 
+    //Check to see if game has started and if just starting a round --> give turn to new player
+    if (g.totalMoves > 0 && g.turn === 0) {
+      g.turn = p.order;
+    }
+
     this._logger.verbose(`game as modified DTO:${JSON.stringify(g)}`);
     this._logger.debug('calling addPlayertoGame');
     this.gamesDb.updateGame(g);
