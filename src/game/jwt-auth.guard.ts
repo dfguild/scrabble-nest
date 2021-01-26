@@ -5,11 +5,13 @@ import * as jwt from 'jsonwebtoken';
 import * as jwks from 'jwks-rsa';
 import { promisify } from 'util';
 import { Logger } from '@nestjs/common';
+import { CERT_AGE } from '../Constants';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   logger: Logger;
-  cert: string;
+  cert: string = '';
+  certDate: Date;
 
   jwks = jwks({
     cache: true,
@@ -28,9 +30,12 @@ export class JwtAuthGuard implements CanActivate {
     const authToken: string = client.handshake.query['token'];
     const getKey = promisify(this.jwks.getSigningKeyAsync);
     try {
-      const key = await getKey(this.getKid(authToken));
-      const signingKey = (key['publicKey'] as string) || (key['rsaPublicKey'] as string);
-      const jwtPayload = jwt.verify(authToken, signingKey, { algorithms: ['RS256'] });
+      if (this.cert === '' || (new Date().getTime() - this.certDate.getTime()) / 1000 > CERT_AGE) {
+        const key = await getKey(this.getKid(authToken));
+        this.cert = (key['publicKey'] as string) || (key['rsaPublicKey'] as string);
+        this.certDate = new Date();
+      }
+      const jwtPayload = jwt.verify(authToken, this.cert, { algorithms: ['RS256'] });
       this.logger.debug(`:canActivate jwtPayload=${JSON.stringify(jwtPayload)}returning true`);
       return Boolean(jwtPayload);
     } catch (err) {

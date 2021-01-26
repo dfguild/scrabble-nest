@@ -4,6 +4,7 @@ export const DB_SECRET_NAME = 'cdbsecret';
 export const DB_NAME = 'GuildScrabbleDB';
 export const DB_URL = 'https://guild-scrabble-cosmodb-api.documents.azure.com:443/';
 export const CONTAINER_NAME = 'games';
+export const CERT_AGE = 300;
 
 export const BLANK_GRID = [
   ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
