@@ -51,8 +51,8 @@ export class GameService {
     g.players.push(p);
     g.remainingTiles = this.tileBag.tileBag;
 
-    //Check to see if game has started and if just starting a round --> give turn to new player
-    if (g.totalMoves > 0 && g.turn === 0) {
+    //Check to see if game has started and if just starting 2nd round --> give turn to new player
+    if (g.totalMoves === g.players.length) {
       g.turn = p.order;
     }
 
