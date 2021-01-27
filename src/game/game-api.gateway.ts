@@ -45,6 +45,7 @@ export class GameApiGateway {
     } else {
       this.server.to(g.id).emit('gameDto', g);
     }
+    this.sendGamesList(); //turns are likely changed -- send gameList update
   }
 
   //GameList APIs

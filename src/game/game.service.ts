@@ -51,13 +51,16 @@ export class GameService {
     g.players.push(p);
     g.remainingTiles = this.tileBag.tileBag;
 
-    //Check to see if game has started and if just starting 2nd round --> give turn to new player
-    if (g.totalMoves === g.players.length) {
+    //Check to see if turn is back to first player -- new player gets turn
+    //Client checks to see that this can only happen in the first round
+    this._logger.debug(`:joinGame turn: ${g.turn} totalMoves: ${g.totalMoves}`);
+    if (g.turn === 0 && g.totalMoves > 0) {
+      this._logger.debug(`:joinGame setting turn to ${p.order}`);
       g.turn = p.order;
     }
 
     this._logger.verbose(`game as modified DTO:${JSON.stringify(g)}`);
-    this._logger.debug('calling addPlayertoGame');
+    this._logger.debug('calling gamesDb:updateGame');
     this.gamesDb.updateGame(g);
     return true;
   }
