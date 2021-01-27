@@ -57,6 +57,7 @@ export class GamesDbService implements OnModuleInit {
       itemObj.gamePlayers = game.players.map((p) => p.player_name);
       itemObj.gameTurn = game.turn;
       itemObj.gameState = game.gameState;
+      itemObj.totalMoves = game.totalMoves;
       gameList.push(itemObj);
     }
     this.logger.debug(`:getGamesList returning ${JSON.stringify(gameList)}`);
