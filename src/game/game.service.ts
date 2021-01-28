@@ -68,12 +68,9 @@ export class GameService {
   updateGame(newGameDto: GameDTO): GameDTO {
     const g = this.gamesDb.getGame(newGameDto.id);
     this._logger.debug(`:updateGame updating turn from: ${g.turn}`);
-    //leave turn set to winner if game over
-    if (g.gameState === GameState.InPlay) {
-      g.turn = ++g.turn % g.players.length;
-    }
+    g.turn = newGameDto.turn;
     this._logger.debug(`:updateGame updating turn to: ${g.turn}`);
-    g.totalMoves += 1;
+    g.totalMoves = newGameDto.totalMoves;
     g.gameState = newGameDto.gameState;
     g.grid = newGameDto.grid;
     g.remainingTiles = newGameDto.remainingTiles;

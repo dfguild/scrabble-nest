@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class GameApiGateway {
   private readonly logger = new Logger(GameApiGateway.name);
   @WebSocketServer() server;
+  private roomMap = new Map<string, Socket[]>();
 
   constructor(private readonly gamesDb: GamesDbService, private readonly gmService: GameService) {}
 
@@ -20,13 +21,20 @@ export class GameApiGateway {
   @SubscribeMessage('startGame')
   async onGameStart(@ConnectedSocket() client: Socket, @MessageBody() g: { player: string; id: string }) {
     const gameDto: GameDTO = this.gamesDb.getGame(g.id);
-    client.join(g.id); //join room of game name
+    if (!this.roomMap.has(g.id) || !this.roomMap.get(g.id).includes(client)) {
+      client.join(g.id); //join room of game name
+      if (!this.roomMap.has(g.id)) {
+        this.roomMap.set(g.id, [client]);
+      } else {
+        this.roomMap.get(g.id).push(client);
+      }
+    }
     this.logger.debug(`:get gameDTO: ${JSON.stringify(gameDto)}`);
     this.sendGameDto(gameDto, client);
   }
 
   @SubscribeMessage('updateGame')
-  async onGameMove(@ConnectedSocket() client: Socket, @MessageBody() g: GameDTO) {
+  async onGameMove(@MessageBody() g: GameDTO) {
     this.sendGameDto(this.gmService.updateGame(g));
   }
 
