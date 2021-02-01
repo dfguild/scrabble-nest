@@ -77,6 +77,12 @@ export class GameService {
     g.grid = newGameDto.grid;
     g.remainingTiles = newGameDto.remainingTiles;
     g.players[newGameDto.players[0].order] = newGameDto.players[0];
+    if (newGameDto.gameState === GameState.GameOver) {
+      //extract and update all the players scores
+      for (const p of newGameDto.players) {
+        g.players[p.order].score = p.score;
+      }
+    }
     g.passCounter = newGameDto.passCounter;
     this._logger.verbose(`:updateGame - update game:${JSON.stringify(g)}`);
     this.gamesDb.updateGame(g);
