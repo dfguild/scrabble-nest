@@ -12,7 +12,6 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class GameApiGateway {
   private readonly logger = new Logger(GameApiGateway.name);
   @WebSocketServer() server;
-  private roomMap = new Map<string, Socket[]>();
 
   constructor(private readonly gamesDb: GamesDbService, private readonly gmService: GameService) {}
 
@@ -21,14 +20,8 @@ export class GameApiGateway {
   @SubscribeMessage('startGame')
   async onGameStart(@ConnectedSocket() client: Socket, @MessageBody() g: { player: string; id: string }) {
     const gameDto: GameDTO = this.gamesDb.getGame(g.id);
-    if (!this.roomMap.has(g.id) || !this.roomMap.get(g.id).includes(client)) {
-      client.join(g.id); //join room of game name
-      if (!this.roomMap.has(g.id)) {
-        this.roomMap.set(g.id, [client]);
-      } else {
-        this.roomMap.get(g.id).push(client);
-      }
-    }
+
+    client.join(g.id); //join room of game name
     this.logger.debug(`:get gameDTO: ${JSON.stringify(gameDto)}`);
     this.sendGameDto(gameDto, client);
   }
@@ -36,6 +29,14 @@ export class GameApiGateway {
   @SubscribeMessage('updateGame')
   async onGameMove(@MessageBody() g: GameDTO) {
     this.sendGameDto(this.gmService.updateGame(g));
+  }
+
+  @SubscribeMessage('joinRoom')
+  async onRoomJoin(@ConnectedSocket() client: Socket, @MessageBody() g: { id: string; totalMoves: number }) {
+    client.join(g.id);
+    if (g.totalMoves <= this.gamesDb.getGame(g.id).totalMoves) {
+      this.sendGameDto(this.gamesDb.getGame(g.id), client);
+    }
   }
 
   //GAME related OUTBOUND API responses
@@ -47,6 +48,7 @@ export class GameApiGateway {
 
   //send game updates to correct room
   sendGameDto(g: GameDTO, socket?: Socket) {
+    //Add protocol to resend if response isn't received
     this.logger.debug(`:onGameJoin - getting DTO with ${JSON.stringify(g)}`);
     if (socket) {
       socket.emit('gameDto', g);

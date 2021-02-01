@@ -67,11 +67,13 @@ export class GameService {
 
   updateGame(newGameDto: GameDTO): GameDTO {
     const g = this.gamesDb.getGame(newGameDto.id);
+    if (newGameDto.totalMoves <= g.totalMoves) return g; //already handled or old
     this._logger.debug(`:updateGame updating turn from: ${g.turn}`);
     g.turn = newGameDto.turn;
     this._logger.debug(`:updateGame updating turn to: ${g.turn}`);
     g.totalMoves = newGameDto.totalMoves;
     g.gameState = newGameDto.gameState;
+    g.gameMessage = newGameDto.gameMessage;
     g.grid = newGameDto.grid;
     g.remainingTiles = newGameDto.remainingTiles;
     g.players[newGameDto.players[0].order] = newGameDto.players[0];
