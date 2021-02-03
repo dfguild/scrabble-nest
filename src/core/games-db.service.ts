@@ -13,7 +13,6 @@ export class GamesDbService implements OnModuleInit {
 
   onModuleInit(): void {
     this.initDB();
-    this.pruneDB();
     setInterval(this.pruneDB, Constants.PRUNE_DB_HOURS * 60 * 60 * 1000);
   }
 
@@ -31,6 +30,7 @@ export class GamesDbService implements OnModuleInit {
       this.logger.debug(`:InitDB Item=${JSON.stringify(g)}`);
       this.idToGameDto.set(g.id, g);
     }
+    this.pruneDB(); // run a prune on startup
   }
 
   async pruneDB(): Promise<void> {
