@@ -4,7 +4,11 @@ export const DB_SECRET_NAME = 'cdbsecret';
 export const DB_NAME = 'GuildScrabbleDB';
 export const DB_URL = 'https://guild-scrabble-cosmodb-api.documents.azure.com:443/';
 export const CONTAINER_NAME = 'games';
-export const CERT_AGE = 300;
+export const COMPLETE_GAME_PRUNE_HOURS = 24; //Hours to keep complete games prior to pruning.
+export const INACTIVE_GAME_PRUNE_HOURS = 7 * 24; //Abandon game cleanup time
+export const PRUNE_DB_HOURS = 12; //hours between executions of the DB pruning logic
+
+export const CERT_AGE = 300; // seconds to trust jwks key prior to checking for new one.
 
 export const BLANK_GRID = [
   ['', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],

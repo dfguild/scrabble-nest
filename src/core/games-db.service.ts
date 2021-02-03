@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { GameDTO, GameListDTO, GameListItem } from '../game/Game-dto';
+import { GameDTO, GameListDTO, GameListItem, GameState } from '../game/Game-dto';
 import * as Constants from '../Constants';
 import { DefaultAzureCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
@@ -13,6 +13,8 @@ export class GamesDbService implements OnModuleInit {
 
   onModuleInit(): void {
     this.initDB();
+    this.pruneDB();
+    setInterval(this.pruneDB, Constants.PRUNE_DB_HOURS * 60 * 60 * 1000);
   }
 
   async initDB(): Promise<void> {
@@ -28,6 +30,23 @@ export class GamesDbService implements OnModuleInit {
     for (const g of resources) {
       this.logger.debug(`:InitDB Item=${JSON.stringify(g)}`);
       this.idToGameDto.set(g.id, g);
+    }
+  }
+
+  async pruneDB(): Promise<void> {
+    const now = +new Date();
+    this.logger.log(`:PruneDB running`);
+    for (const value of this.idToGameDto.values()) {
+      const lastUpdate = +new Date(value.gameDate);
+      const ageHours: number = Math.floor((now - lastUpdate) / (60 * 60 * 1000));
+      if (
+        (value.gameState === GameState.GameOver && ageHours >= Constants.COMPLETE_GAME_PRUNE_HOURS) ||
+        ageHours >= Constants.INACTIVE_GAME_PRUNE_HOURS
+      ) {
+        this.logger.log(`:PruneDB deleting item ${value.id} dated: ${value.gameDate} with state ${value.gameState}`);
+        await this.db.item(value.id).delete();
+        this.idToGameDto.delete(value.id);
+      }
     }
   }
 
