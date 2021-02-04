@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { GameDTO, GameListDTO, GameListItem, GameState } from '../game/Game-dto';
-import * as Constants from '../Constants';
 import { DefaultAzureCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
 import { CosmosClient, Container } from '@azure/cosmos';
+import { GameDTO, GameListDTO, GameListItem, GameState } from '../game/Game-dto';
+import * as Constants from '../Constants';
 
 @Injectable()
 export class GamesDbService implements OnModuleInit {
@@ -13,7 +13,7 @@ export class GamesDbService implements OnModuleInit {
 
   onModuleInit(): void {
     this.initDB();
-    setInterval(this.pruneDB, Constants.PRUNE_DB_HOURS * 60 * 60 * 1000);
+    setInterval(this.pruneDB.bind(this), Constants.PRUNE_DB_HOURS * 60 * 60 * 1000);
   }
 
   async initDB(): Promise<void> {
